@@ -1,3 +1,5 @@
+#import <UIKit/UIKit.h>
+
 @interface NSDictionary (NSDictionaryAdditions)
 - (id)objectForKeyNotNull:(NSString*)key;
 @end
