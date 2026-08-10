@@ -6,12 +6,12 @@ enum DTPDateBounds {
     DDBIntervalFactor = 1000
 };
 
-@interface DateTimePicker : CDVPlugin <UIViewControllerTransitioningDelegate> {
+@interface DateTimePicker : CDVPlugin <UIViewControllerTransitioningDelegate, UIPopoverPresentationControllerDelegate> {
 }
     
 - (void)show:(CDVInvokedUrlCommand*)command;
 - (void)hide:(CDVInvokedUrlCommand*)command;
-- (void)handleDatePickerTap;
+- (void)handleDatePickerTap:(id)sender;
 
 @property (strong) ModalPickerViewController* modalPicker;
 

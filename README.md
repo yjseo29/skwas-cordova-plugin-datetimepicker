@@ -51,6 +51,7 @@ This was the original way to call the plugin, and is kept for compatibility.
 | cancel              | Function()          | -              | ![Supported][supported]    | ![Supported][supported]    | The cancel callback |
 | error               | Function(err)       | -              | ![Supported][supported]    | ![Supported][supported]    | The error callback |
 | android             | Object              | {}             | optional                   | ignored                    | Android specific options |
+| ios                 | Object              | {}             | ignored                    | optional                   | iOS specific options |
 
 > When providing the `clearText` property, an extra button is shown with intent to clear the current date. When the user taps this button, the `success` callback will be called with an `undefined` date. From a UI perspective, this button should be hidden by application code when no date is currently set by omitting the property, but this is up to you.
 
@@ -62,6 +63,18 @@ This was the original way to call the plugin, and is kept for compatibility.
 | is24HourView        | boolean             | true        | Use a 24 hour clock |
 
 > On Lollipop and upwards the date and time pickers changed to calendar and radial pickers. If you want to use spinners (for example to use `minuteInterval`), use a built-in [android.R.style](https://developer.android.com/reference/android/R.style.html) theme that shows a date and time picker with spinners or read up here [how to customize this](./docs/Android_custom_theme_and_styling.md).
+
+#### iOS options
+
+| Name                | Type                | Default     | Description               |
+|---------------------|---------------------|-------------|---------------------------|
+| pickerStyle         | String              | `wheels`    | The picker UI: `wheels` shows spinner wheels, `calendar` (iOS 14+) shows an inline calendar. `calendar` applies to the `date` and `datetime` modes only (`time` mode always uses wheels). |
+| presentation        | String              | `sheet`     | How the picker is presented: `sheet` (bottom sheet), `popup` (centered on screen) or `popover` (anchored to `anchorEl`). iOS automatically positions the popover below or above the element, wherever there is room. |
+| anchorEl            | Element or String   |             | The DOM element (or CSS selector) the popover is anchored to. Required for `presentation: "popover"`; without it the picker falls back to the sheet. |
+| toolbar             | boolean             | `true`      | Set to `false` to hide the title and the buttons: only the picker is shown, and dismissing (tapping outside) confirms the selection. |
+| popupWidth          | number              | `360`       | Width of the centered popup in points. Always capped to the screen width; values below 280 are raised to 280. |
+| popoverMaxWidth     | number              |             | Maximum width of the popover content in points. By default the popover sizes itself to its content; values below 280 are raised to 280. |
+| theme               | String              | (system)    | `light` or `dark` forces the picker's appearance regardless of the system theme; omit to follow the system. |
 
 #### Example
 

@@ -25,6 +25,48 @@ interface IDatePickerOptions {
     calendar?: boolean;
     is24HourView?: boolean;
   };
+  ios?: {
+    /**
+     * The picker UI. "wheels" (default) shows spinner wheels. "calendar"
+     * (iOS 14+) shows an inline calendar; applies to the date and datetime
+     * modes only (time mode always uses wheels).
+     */
+    pickerStyle?: 'wheels' | 'calendar';
+    /**
+     * How the picker is presented. "sheet" (default) is a bottom sheet,
+     * "popup" is centered on screen, and "popover" is anchored to anchorEl.
+     * iOS positions the popover automatically (below/above the element,
+     * wherever there is room).
+     */
+    presentation?: 'sheet' | 'popup' | 'popover';
+    /**
+     * The element (or CSS selector) the popover is anchored to.
+     * Required for presentation "popover"; without it the picker falls back
+     * to the sheet presentation.
+     */
+    anchorEl?: HTMLElement | string;
+    /**
+     * Set to false to hide the title and the buttons: only the picker is
+     * shown, and dismissing (tapping outside) confirms the selection.
+     * Defaults to true.
+     */
+    toolbar?: boolean;
+    /**
+     * Width of the centered popup in points (default 360). Always capped to
+     * the screen width; values below 280 are raised to 280.
+     */
+    popupWidth?: number;
+    /**
+     * Maximum width of the popover content in points. By default the popover
+     * sizes itself to its content; values below 280 are raised to 280.
+     */
+    popoverMaxWidth?: number;
+    /**
+     * "light" or "dark" forces the picker's appearance regardless of the
+     * system theme; omit to follow the system (default).
+     */
+    theme?: 'light' | 'dark';
+  };
   success: (newDate?: Date) => void;
   cancel?: () => void;
   error: (err: Error) => void;

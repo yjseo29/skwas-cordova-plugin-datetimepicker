@@ -35,8 +35,20 @@
 
     [self configureDatePicker:optionsOrNil datePicker:self.modalPicker.datePicker];
 
-    // Present the view with our custom transition.
-    [self.viewController presentViewController:self.modalPicker animated:YES completion:nil];
+    // If the previous presentation is still animating out (e.g. hide()
+    // immediately followed by show()), presenting right away fails silently
+    // and leaves a blank screen; wait for the dismissal to finish first.
+    if (self.modalPicker.isBeingDismissed && self.modalPicker.transitionCoordinator != nil) {
+        __weak DateTimePicker *weakSelf = self;
+        [self.modalPicker.transitionCoordinator animateAlongsideTransition:nil completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+            DateTimePicker *strongSelf = weakSelf;
+            if (strongSelf != nil) {
+                [strongSelf.viewController presentViewController:strongSelf.modalPicker animated:YES completion:nil];
+            }
+        }];
+    } else {
+        [self.viewController presentViewController:self.modalPicker animated:YES completion:nil];
+    }
 
     _isVisible = YES;
 }
@@ -68,11 +80,35 @@
     return animator;
 }
 
+#pragma mark UIPopoverPresentationControllerDelegate methods
+
+// Keep the real popover look on iPhone instead of adapting to a sheet.
+- (UIModalPresentationStyle)adaptivePresentationStyleForPresentationController:(UIPresentationController *)controller {
+    return UIModalPresentationNone;
+}
+
+- (UIModalPresentationStyle)adaptivePresentationStyleForPresentationController:(UIPresentationController *)controller traitCollection:(UITraitCollection *)traitCollection {
+    return UIModalPresentationNone;
+}
+
+// Called when the user dismisses the popover by tapping outside of it.
+// Without a toolbar there are no buttons, so dismissing confirms the
+// selection; with a toolbar it cancels.
+- (void)presentationControllerDidDismiss:(UIPresentationController *)presentationController {
+    if (self.modalPicker.showToolbar) {
+        if (self.modalPicker.cancelHandler != nil) self.modalPicker.cancelHandler();
+    } else {
+        if (self.modalPicker.doneHandler != nil) self.modalPicker.doneHandler(self.modalPicker);
+    }
+}
 #pragma mark - Private Methods
 
 - (void)initPickerView:(UIView*)theWebView {
     ModalPickerViewController *picker = [[ModalPickerViewController alloc] init];
 
+    // Custom floating card with our own sheet-like spring transition.
+    // (A native UISheetPresentationController was tried, but it cannot keep the
+    // sheet fully fixed while dragging the picker wheels.)
     picker.modalPresentationStyle = UIModalPresentationCustom;
     picker.transitioningDelegate = self;
 
@@ -100,13 +136,91 @@
 
 - (void)configureDatePicker:(NSMutableDictionary *)optionsOrNil datePicker:(UIDatePicker *)datePicker {
     
-    // Prefer wheels style on iOS 14.
-    if (@available(iOS 13.4, *)) {
+    // iOS-specific options:
+    // - pickerStyle: "wheels" (default) or "calendar" (iOS 14+, date/datetime only).
+    // - presentation: "sheet" (default), "popup" (centered), or "popover"
+    //   (anchored to the element rect in "anchorRect"; the system decides
+    //   whether it fits below or above the element).
+    // - toolbar: NO hides the title and buttons; dismissing then confirms.
+    NSString *mode = [optionsOrNil objectForKey:@"mode"];
+    NSDictionary *iosOptions = [optionsOrNil objectForKeyNotNull:@"ios"];
+    NSString *pickerStyleRaw = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"pickerStyle"] : nil;
+    NSString *presentationRaw = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"presentation"] : nil;
+    NSDictionary *anchorRect = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"anchorRect"] : nil;
+    NSNumber *toolbarValue = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"toolbar"] : nil;
+    NSString *pickerStyle = [pickerStyleRaw isKindOfClass:NSString.class] ? [pickerStyleRaw lowercaseString] : @"";
+    NSString *presentation = [presentationRaw isKindOfClass:NSString.class] ? [presentationRaw lowercaseString] : @"";
+
+    // The picker UI: calendar falls back to wheels for the time mode and below iOS 14.
+    BOOL useCalendar = NO;
+    if (@available(iOS 14.0, *)) {
+        useCalendar = [pickerStyle isEqualToString:@"calendar"] && ![mode isEqualToString:@"time"];
+        UIDatePickerStyle newStyle = useCalendar ? UIDatePickerStyleInline : UIDatePickerStyleWheels;
+        if (datePicker.preferredDatePickerStyle != newStyle) {
+            // Changing the style while the picker is installed in a view
+            // hierarchy (with the previous style's constraints) can leave its
+            // internal layout broken. Detach it first; it is re-added when the
+            // picker controls are rebuilt for the new style.
+            [datePicker removeFromSuperview];
+            datePicker.preferredDatePickerStyle = newStyle;
+        }
+    } else if (@available(iOS 13.4, *)) {
         datePicker.preferredDatePickerStyle = UIDatePickerStyleWheels;
     }
-    
+
+    // The presentation: popover falls back to the sheet when no anchor rect
+    // was provided.
+    BOOL usePopover = [presentation isEqualToString:@"popover"]
+        && [anchorRect isKindOfClass:NSDictionary.class];
+    BOOL usePopup = !usePopover && [presentation isEqualToString:@"popup"];
+
+    self.modalPicker.inlinePicker = useCalendar;
+    self.modalPicker.popupPresentation = usePopup;
+    self.modalPicker.popoverPresentation = usePopover;
+    self.modalPicker.showToolbar = toolbarValue != nil ? [toolbarValue boolValue] : YES;
+
+    // Optional width overrides; clamped to a sane minimum so the picker
+    // cannot be squeezed into an unusable layout.
+    NSNumber *popupWidthValue = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"popupWidth"] : nil;
+    NSNumber *popoverMaxWidthValue = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"popoverMaxWidth"] : nil;
+    self.modalPicker.popupWidth = popupWidthValue != nil ? MAX(280, [popupWidthValue doubleValue]) : 0;
+    self.modalPicker.popoverMaxWidth = popoverMaxWidthValue != nil ? MAX(280, [popoverMaxWidthValue doubleValue]) : 0;
+
+    // Optional forced light/dark appearance; follows the system otherwise.
+    // Affects the whole picker: our own styling and UIKit's dynamic colors.
+    if (@available(iOS 13.0, *)) {
+        NSString *themeRaw = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"theme"] : nil;
+        NSString *theme = [themeRaw isKindOfClass:NSString.class] ? [themeRaw lowercaseString] : @"";
+        if ([theme isEqualToString:@"light"]) {
+            self.modalPicker.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
+        } else if ([theme isEqualToString:@"dark"]) {
+            self.modalPicker.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+        } else {
+            self.modalPicker.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
+        }
+    }
+
+    // Presentation. The presentation controller is recreated per presentation,
+    // so this is (re)configured on every show.
+    if (usePopover) {
+        self.modalPicker.modalPresentationStyle = UIModalPresentationPopover;
+        self.modalPicker.transitioningDelegate = nil;
+
+        UIPopoverPresentationController *popover = self.modalPicker.popoverPresentationController;
+        popover.sourceView = self.webView;
+        popover.sourceRect = CGRectMake(
+            [[anchorRect objectForKeyNotNull:@"x"] doubleValue],
+            [[anchorRect objectForKeyNotNull:@"y"] doubleValue],
+            MAX(1, [[anchorRect objectForKeyNotNull:@"width"] doubleValue]),
+            MAX(1, [[anchorRect objectForKeyNotNull:@"height"] doubleValue]));
+        popover.permittedArrowDirections = UIPopoverArrowDirectionUp | UIPopoverArrowDirectionDown;
+        popover.delegate = self;
+    } else {
+        self.modalPicker.modalPresentationStyle = UIModalPresentationCustom;
+        self.modalPicker.transitioningDelegate = self;
+    }
+
     // Mode (must be set first, otherwise minuteInterval > 1 acts wonky).
-    NSString *mode = [optionsOrNil objectForKey:@"mode"];
     if ([mode isEqualToString:@"date"]) {
         datePicker.datePickerMode = UIDatePickerModeDate;
     } else if ([mode isEqualToString:@"time"]) {

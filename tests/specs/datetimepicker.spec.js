@@ -177,6 +177,14 @@ describe("show", () => {
                         theme: undefined,
                         calendar: false
                     },
+                    ios: {
+                        pickerStyle: undefined,
+                        presentation: undefined,
+                        toolbar: undefined,
+                        popupWidth: undefined,
+                        popoverMaxWidth: undefined,
+                        theme: undefined
+                    },
                     success: cbSuccessSpy,
                     error: cbErrorSpy,
                     cancel: cbCancelSpy

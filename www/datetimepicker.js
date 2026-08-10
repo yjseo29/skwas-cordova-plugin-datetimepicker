@@ -59,6 +59,31 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
             theme: undefined,
             calendar: false
         },
+        ios: {
+            // The picker UI: "wheels" (default) or "calendar" (iOS 14+, date and
+            // datetime modes only; time always uses wheels).
+            pickerStyle: undefined,
+            // How the picker is presented: "sheet" (default, bottom sheet),
+            // "popup" (centered) or "popover" (anchored to anchorEl). For a
+            // popover, iOS positions it automatically (below/above the
+            // element, wherever there is room).
+            presentation: undefined,
+            // DOM element (or CSS selector) the popover is anchored to.
+            // Required for presentation "popover".
+            anchorEl: undefined,
+            // Set to false to hide the title and the buttons: only the picker is
+            // shown, and dismissing (tapping outside) confirms the selection.
+            toolbar: undefined,
+            // Width of the centered popup in points (default 360). Always capped
+            // to the screen width; values below 280 are raised to 280.
+            popupWidth: undefined,
+            // Maximum width of the popover content in points. By default the
+            // popover sizes itself to its content; values below 280 are raised to 280.
+            popoverMaxWidth: undefined,
+            // "light" or "dark" forces the picker's appearance regardless of the
+            // system theme; omit to follow the system (default).
+            theme: undefined
+        },
         success: undefined,
         cancel: undefined,
         error: undefined
@@ -126,6 +151,36 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
     } catch (e) {
         onPluginError(e.message);
         return;
+    }
+
+    // Resolve the iOS popover anchor element to its bounding rect, since DOM
+    // elements cannot be passed over the bridge. Build a serializable copy so
+    // the caller's options object is not mutated.
+    if (settings.ios !== null && utils.isObject(settings.ios)) {
+        var iosSettings = {
+            pickerStyle: settings.ios.pickerStyle,
+            presentation: settings.ios.presentation,
+            toolbar: settings.ios.toolbar,
+            popupWidth: settings.ios.popupWidth,
+            popoverMaxWidth: settings.ios.popoverMaxWidth,
+            theme: settings.ios.theme
+        };
+        var anchorEl = settings.ios.anchorEl;
+        if (anchorEl) {
+            if (typeof anchorEl === "string") {
+                anchorEl = document.querySelector(anchorEl);
+            }
+            if (anchorEl && typeof anchorEl.getBoundingClientRect === "function") {
+                var anchorRect = anchorEl.getBoundingClientRect();
+                iosSettings.anchorRect = {
+                    x: anchorRect.left,
+                    y: anchorRect.top,
+                    width: anchorRect.width,
+                    height: anchorRect.height
+                };
+            }
+        }
+        settings.ios = iosSettings;
     }
 
     console.debug("DateTimePickerPlugin: Exec 'show' with:", settings);
