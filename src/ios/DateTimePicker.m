@@ -163,6 +163,14 @@
             // picker controls are rebuilt for the new style.
             [datePicker removeFromSuperview];
             datePicker.preferredDatePickerStyle = newStyle;
+        } else if (newStyle == UIDatePickerStyleInline) {
+            // Recreate the inline calendar's internals: they keep their
+            // browsing state, so a picker dismissed while showing the
+            // year/month wheel would reopen on that wheel instead of the
+            // calendar grid.
+            [datePicker removeFromSuperview];
+            datePicker.preferredDatePickerStyle = UIDatePickerStyleWheels;
+            datePicker.preferredDatePickerStyle = UIDatePickerStyleInline;
         }
     } else if (@available(iOS 13.4, *)) {
         datePicker.preferredDatePickerStyle = UIDatePickerStyleWheels;

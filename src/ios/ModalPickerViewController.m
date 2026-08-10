@@ -123,7 +123,10 @@ static const float kCapsuleButtonCornerRadius = 16;
     } else if (_builtAsPopup != self.popupPresentation
                || _builtAsPopover != self.popoverPresentation
                || _builtAsInline != self.inlinePicker
-               || _builtWithToolbar != self.showToolbar) {
+               || _builtWithToolbar != self.showToolbar
+               // The date picker is detached when its style is reset (see
+               // configureDatePicker); rebuild to re-add it.
+               || _datePicker.superview == nil) {
         // The requested configuration changed since the last presentation; rebuild.
         [self teardownControls];
         [self createControls];
