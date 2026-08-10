@@ -54,34 +54,51 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
         cancelText: null,
         clearText: null,
         titleText: null,
+        // Platform-shared UI options; the android/ios objects can override them.
+        // The picker UI: "wheels" (default) or "calendar" (calendar date picker;
+        // on Android the time picker then uses the clock face, on iOS time
+        // always uses wheels).
+        pickerStyle: undefined,
+        // How the picker is presented: "sheet" (default), "popup" (centered) or
+        // "popover" (iOS only, anchored to ios.anchorEl; Android falls back to
+        // "popup").
+        presentation: undefined,
+        // Set to false to hide the title and the buttons: only the picker is
+        // shown, and dismissing confirms the selection.
+        toolbar: undefined,
+        // Width of the centered popup in points/dp (default 360). Always capped
+        // to the screen width.
+        popupWidth: undefined,
+        // "light" or "dark" forces the picker's appearance regardless of the
+        // system theme; omit to follow the system.
+        theme: undefined,
+        // Use a 24 hour clock; when omitted the device's 24-hour setting is
+        // followed. Android only: on iOS the 12/24 hour clock follows the
+        // locale option/device locale.
+        is24HourView: undefined,
+        // Android specific options; the shared options above can be overridden
+        // per platform here. Android-only: theme also accepts legacy
+        // android.R.style integers, is24HourView, calendar (deprecated - use
+        // pickerStyle "calendar" instead).
         android: {
-            // If omitted/undefined, default theme will be used.
+            pickerStyle: undefined,
+            presentation: undefined,
+            toolbar: undefined,
+            popupWidth: undefined,
             theme: undefined,
             calendar: false
         },
+        // iOS specific options; the shared options above can be overridden per
+        // platform here. iOS-only: anchorEl (DOM element or CSS selector the
+        // popover is anchored to, required for presentation "popover") and
+        // popoverMaxWidth (maximum popover content width in points).
         ios: {
-            // The picker UI: "wheels" (default) or "calendar" (iOS 14+, date and
-            // datetime modes only; time always uses wheels).
             pickerStyle: undefined,
-            // How the picker is presented: "sheet" (default, bottom sheet),
-            // "popup" (centered) or "popover" (anchored to anchorEl). For a
-            // popover, iOS positions it automatically (below/above the
-            // element, wherever there is room).
             presentation: undefined,
-            // DOM element (or CSS selector) the popover is anchored to.
-            // Required for presentation "popover".
             anchorEl: undefined,
-            // Set to false to hide the title and the buttons: only the picker is
-            // shown, and dismissing (tapping outside) confirms the selection.
             toolbar: undefined,
-            // Width of the centered popup in points (default 360). Always capped
-            // to the screen width; values below 280 are raised to 280.
             popupWidth: undefined,
-            // Maximum width of the popover content in points. By default the
-            // popover sizes itself to its content; values below 280 are raised to 280.
             popoverMaxWidth: undefined,
-            // "light" or "dark" forces the picker's appearance regardless of the
-            // system theme; omit to follow the system (default).
             theme: undefined
         },
         success: undefined,
@@ -153,35 +170,51 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
         return;
     }
 
-    // Resolve the iOS popover anchor element to its bounding rect, since DOM
-    // elements cannot be passed over the bridge. Build a serializable copy so
-    // the caller's options object is not mutated.
-    if (settings.ios !== null && utils.isObject(settings.ios)) {
-        var iosSettings = {
-            pickerStyle: settings.ios.pickerStyle,
-            presentation: settings.ios.presentation,
-            toolbar: settings.ios.toolbar,
-            popupWidth: settings.ios.popupWidth,
-            popoverMaxWidth: settings.ios.popoverMaxWidth,
-            theme: settings.ios.theme
-        };
-        var anchorEl = settings.ios.anchorEl;
-        if (anchorEl) {
-            if (typeof anchorEl === "string") {
-                anchorEl = document.querySelector(anchorEl);
-            }
-            if (anchorEl && typeof anchorEl.getBoundingClientRect === "function") {
-                var anchorRect = anchorEl.getBoundingClientRect();
-                iosSettings.anchorRect = {
-                    x: anchorRect.left,
-                    y: anchorRect.top,
-                    width: anchorRect.width,
-                    height: anchorRect.height
-                };
-            }
+    // Merge the platform-shared options into the platform objects the native
+    // side reads (a platform value overrides the shared one), and resolve the
+    // iOS popover anchor element to its bounding rect, since DOM elements
+    // cannot be passed over the bridge. Serializable copies are built so the
+    // caller's options object is not mutated.
+    var firstDefined = function (platformValue, sharedValue) {
+        return utils.isDefined(platformValue) ? platformValue : sharedValue;
+    };
+
+    var androidOptions = settings.android !== null && utils.isObject(settings.android) ? settings.android : {};
+    settings.android = {
+        pickerStyle: firstDefined(androidOptions.pickerStyle, settings.pickerStyle),
+        presentation: firstDefined(androidOptions.presentation, settings.presentation),
+        toolbar: firstDefined(androidOptions.toolbar, settings.toolbar),
+        popupWidth: firstDefined(androidOptions.popupWidth, settings.popupWidth),
+        theme: firstDefined(androidOptions.theme, settings.theme),
+        calendar: androidOptions.calendar,
+        is24HourView: firstDefined(androidOptions.is24HourView, settings.is24HourView)
+    };
+
+    var iosOptions = settings.ios !== null && utils.isObject(settings.ios) ? settings.ios : {};
+    var iosSettings = {
+        pickerStyle: firstDefined(iosOptions.pickerStyle, settings.pickerStyle),
+        presentation: firstDefined(iosOptions.presentation, settings.presentation),
+        toolbar: firstDefined(iosOptions.toolbar, settings.toolbar),
+        popupWidth: firstDefined(iosOptions.popupWidth, settings.popupWidth),
+        popoverMaxWidth: iosOptions.popoverMaxWidth,
+        theme: firstDefined(iosOptions.theme, settings.theme)
+    };
+    var anchorEl = iosOptions.anchorEl;
+    if (anchorEl) {
+        if (typeof anchorEl === "string") {
+            anchorEl = document.querySelector(anchorEl);
         }
-        settings.ios = iosSettings;
+        if (anchorEl && typeof anchorEl.getBoundingClientRect === "function") {
+            var anchorRect = anchorEl.getBoundingClientRect();
+            iosSettings.anchorRect = {
+                x: anchorRect.left,
+                y: anchorRect.top,
+                width: anchorRect.width,
+                height: anchorRect.height
+            };
+        }
     }
+    settings.ios = iosSettings;
 
     console.debug("DateTimePickerPlugin: Exec 'show' with:", settings);
     exec(onPluginSuccess, onPluginError, "DateTimePicker", "show", [settings]);

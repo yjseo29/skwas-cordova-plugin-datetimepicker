@@ -173,9 +173,20 @@ describe("show", () => {
                     cancelText: null,
                     clearText: null,
                     titleText: null,
+                    pickerStyle: undefined,
+                    presentation: undefined,
+                    toolbar: undefined,
+                    popupWidth: undefined,
+                    theme: undefined,
+                    is24HourView: undefined,
                     android: {
+                        pickerStyle: undefined,
+                        presentation: undefined,
+                        toolbar: undefined,
+                        popupWidth: undefined,
                         theme: undefined,
-                        calendar: false
+                        calendar: false,
+                        is24HourView: undefined
                     },
                     ios: {
                         pickerStyle: undefined,

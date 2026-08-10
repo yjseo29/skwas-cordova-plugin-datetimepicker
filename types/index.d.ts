@@ -20,8 +20,73 @@ interface IDatePickerOptions {
   cancelText?: string;
   clearText?: string;
   titleText?: string;
+  /**
+   * The picker UI (both platforms; the android/ios objects can override it).
+   * "wheels" (default) shows spinner wheels. "calendar" shows the calendar
+   * date picker; on Android the time picker then uses the clock face, on iOS
+   * the time mode always uses wheels.
+   */
+  pickerStyle?: 'wheels' | 'calendar';
+  /**
+   * How the picker is presented (both platforms; the android/ios objects can
+   * override it). "sheet" (default) is a bottom sheet, "popup" is centered on
+   * screen, "popover" (iOS only, anchored to ios.anchorEl) falls back to
+   * "popup" on Android.
+   */
+  presentation?: 'sheet' | 'popup' | 'popover';
+  /**
+   * Set to false to hide the title and the buttons: only the picker is
+   * shown, and dismissing confirms the selection. Defaults to true.
+   * (Both platforms; the android/ios objects can override it.)
+   */
+  toolbar?: boolean;
+  /**
+   * Width of the centered popup in points/dp (default 360). Always capped to
+   * the screen width. (Both platforms; the android/ios objects can override it.)
+   */
+  popupWidth?: number;
+  /**
+   * "light" or "dark" forces the picker's appearance regardless of the
+   * system theme; omit to follow the system. (Both platforms; the
+   * android/ios objects can override it.)
+   */
+  theme?: 'light' | 'dark';
+  /**
+   * Use a 24 hour clock. Android only (the android object can override it);
+   * on iOS the 12/24 hour clock follows the locale option/device locale.
+   * When omitted, the device's 24-hour setting is followed.
+   */
+  is24HourView?: boolean;
   android?: {
-    theme?: number; // Theme_DeviceDefault_Dialog
+    /**
+     * The picker UI. "wheels" (default) shows spinner wheels. "calendar"
+     * shows the calendar date picker and the clock face time picker
+     * (all modes).
+     */
+    pickerStyle?: 'wheels' | 'calendar';
+    /**
+     * How the picker is presented. "sheet" (default) is a bottom sheet and
+     * "popup" is a centered dialog. "popover" is not an Android convention
+     * and falls back to "popup". Overrides the top-level option.
+     */
+    presentation?: 'sheet' | 'popup' | 'popover';
+    /**
+     * Set to false to hide the title and the buttons: only the picker is
+     * shown, and dismissing confirms the selection. Defaults to true.
+     */
+    toolbar?: boolean;
+    /**
+     * Width of the centered popup in dp (default 360). Always capped to the
+     * screen width.
+     */
+    popupWidth?: number;
+    /**
+     * "light" or "dark" forces the picker's appearance regardless of the
+     * system theme; omit to follow the system. Legacy android.R.style
+     * integers are still accepted and mapped to light/dark by their name.
+     */
+    theme?: number | 'light' | 'dark';
+    /** @deprecated Use pickerStyle "calendar" instead. */
     calendar?: boolean;
     is24HourView?: boolean;
   };

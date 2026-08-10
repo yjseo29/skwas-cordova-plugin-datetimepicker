@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Default colors for the picker (One UI flavored). Priority order at runtime:
+an app-defined "DateTimePickerTheme" style wins over this default, and when
+this file is removed the picker falls back to the Material 3 defaults.
+-->
+<resources>
+    <style name="DateTimePickerDefaultTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Accent: buttons, selected day circle, clock hand. -->
+        <item name="colorPrimary">#0381FE</item>
+        <item name="android:colorAccent">#0381FE</item>
+        <item name="android:colorControlActivated">#0381FE</item>
+        <!-- Popup background. -->
+        <item name="colorSurfaceContainerHigh">#FFFFFF</item>
+        <!-- Bottom sheet background. -->
+        <item name="colorSurfaceContainerLow">#FFFFFF</item>
+        <!-- Text. -->
+        <item name="colorOnSurface">#252525</item>
+        <item name="colorOnSurfaceVariant">#8C8C8C</item>
+    </style>
+
+    <!-- Text sizes of the calendar header labels (year on top, selected date
+         below). Remove these to keep the stock framework sizes. -->
+    <dimen name="dtp_header_year_text_size">16sp</dimen>
+    <dimen name="dtp_header_date_text_size">28sp</dimen>
+
+    <!-- Text size of the footer buttons (Cancel/Clear/OK). -->
+    <dimen name="dtp_button_text_size">15sp</dimen>
+
+    <!-- Text colors of the calendar header labels. Remove these to follow
+         colorOnSurfaceVariant/colorOnSurface from the theme. -->
+    <color name="dtp_header_year_text_color">#8C8C8C</color>
+    <color name="dtp_header_date_text_color">#252525</color>
+
+    <!-- Text color of the footer buttons (Cancel/Clear/OK). Remove to follow
+         colorPrimary from the theme. -->
+    <color name="dtp_button_text_color">#0381FE</color>
+
+    <!-- Wheel (spinner) pickers: text and selection divider. Remove the text
+         color/size or the divider height to keep the stock style. The divider
+         color is applied through DtpWheelThemeOverlay below - when removing
+         it, remove the overlay item as well. -->
+    <color name="dtp_wheel_text_color">#252525</color>
+    <dimen name="dtp_wheel_text_size">18sp</dimen>
+    <color name="dtp_wheel_divider_color">#338C8C8C</color>
+    <dimen name="dtp_wheel_divider_height">2dp</dimen>
+
+    <!-- Applied to the wheel layouts only; the wheels tint their selection
+         dividers with colorControlNormal. -->
+    <style name="DtpWheelThemeOverlay" parent="">
+        <item name="android:colorControlNormal">@color/dtp_wheel_divider_color</item>
+    </style>
+</resources>

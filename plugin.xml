@@ -41,7 +41,7 @@ THE SOFTWARE.
 
     <!-- android -->
     <platform name="android">
-        <framework src="com.android.support:support-annotations:+" />
+        <framework src="com.google.android.material:material:1.11.0" />
 
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="DateTimePicker" >
@@ -50,8 +50,14 @@ THE SOFTWARE.
         </config-file>
 
         <source-file src="src/android/DateTimePicker.java" target-dir="src/com/skwas/cordova/datetimepicker" />
-        <source-file src="src/android/DatePickerDialog.java" target-dir="src/com/skwas/cordova/datetimepicker" />
-        <source-file src="src/android/TimePickerDialog.java" target-dir="src/com/skwas/cordova/datetimepicker" />
+        <source-file src="src/android/PickerDialog.java" target-dir="src/com/skwas/cordova/datetimepicker" />
+
+        <resource-file src="src/android/res/values/dtp_theme.xml" target="res/values/dtp_theme.xml" />
+        <resource-file src="src/android/res/values-night/dtp_theme.xml" target="res/values-night/dtp_theme.xml" />
+        <resource-file src="src/android/res/layout/dtp_date_wheels.xml" target="res/layout/dtp_date_wheels.xml" />
+        <resource-file src="src/android/res/layout/dtp_date_calendar.xml" target="res/layout/dtp_date_calendar.xml" />
+        <resource-file src="src/android/res/layout/dtp_time_wheels.xml" target="res/layout/dtp_time_wheels.xml" />
+        <resource-file src="src/android/res/layout/dtp_time_clock.xml" target="res/layout/dtp_time_clock.xml" />
     </platform>
 
     <!-- ios -->

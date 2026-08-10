@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Default colors for the picker in dark mode (One UI flavored). -->
+<resources>
+    <style name="DateTimePickerDefaultTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Accent: buttons, selected day circle, clock hand. -->
+        <item name="colorPrimary">#3D8BFF</item>
+        <item name="android:colorAccent">#3D8BFF</item>
+        <item name="android:colorControlActivated">#3D8BFF</item>
+        <!-- Popup background. -->
+        <item name="colorSurfaceContainerHigh">#252525</item>
+        <!-- Bottom sheet background. -->
+        <item name="colorSurfaceContainerLow">#252525</item>
+        <!-- Text. -->
+        <item name="colorOnSurface">#FAFAFA</item>
+        <item name="colorOnSurfaceVariant">#AAAAAA</item>
+    </style>
+
+    <!-- Text colors of the calendar header labels (dark). -->
+    <color name="dtp_header_year_text_color">#AAAAAA</color>
+    <color name="dtp_header_date_text_color">#FAFAFA</color>
+
+    <!-- Text color of the footer buttons (dark). -->
+    <color name="dtp_button_text_color">#3D8BFF</color>
+
+    <!-- Wheel (spinner) pickers (dark). -->
+    <color name="dtp_wheel_text_color">#FAFAFA</color>
+    <color name="dtp_wheel_divider_color">#33AAAAAA</color>
+</resources>

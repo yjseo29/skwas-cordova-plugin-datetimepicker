@@ -50,31 +50,103 @@ This was the original way to call the plugin, and is kept for compatibility.
 | success             | Function(date)      | -              | ![Supported][supported]    | ![Supported][supported]    | The success callback |
 | cancel              | Function()          | -              | ![Supported][supported]    | ![Supported][supported]    | The cancel callback |
 | error               | Function(err)       | -              | ![Supported][supported]    | ![Supported][supported]    | The error callback |
-| android             | Object              | {}             | optional                   | ignored                    | Android specific options |
-| ios                 | Object              | {}             | ignored                    | optional                   | iOS specific options |
+| pickerStyle         | String              | `wheels`       | ![Supported][supported]    | ![Supported][supported]    | The picker UI: `wheels` shows spinner wheels, `calendar` shows the calendar date picker. On Android the calendar style also uses the clock face time picker (all modes); on iOS the `time` mode always uses wheels. |
+| presentation        | String              | `sheet`        | ![Supported][supported]    | ![Supported][supported]    | How the picker is presented: `sheet` (bottom sheet), `popup` (centered) or `popover` (iOS only, anchored to `ios.anchorEl`; falls back to `popup` on Android). |
+| toolbar             | boolean             | `true`         | ![Supported][supported]    | ![Supported][supported]    | Set to `false` to hide the title and the buttons: only the picker is shown, and dismissing confirms the selection. |
+| popupWidth          | number              | `360`          | ![Supported][supported]    | ![Supported][supported]    | Width of the centered popup in points/dp. Always capped to the screen width. |
+| theme               | String              | (system)       | ![Supported][supported]    | ![Supported][supported]    | `light` or `dark` forces the picker's appearance regardless of the system theme; omit to follow the system. |
+| is24HourView        | boolean             | (device&#160;setting) | ![Supported][supported] | uses&#160;`locale`         | Use a 24 hour clock; when omitted the device's 24-hour setting is followed. On iOS the 12/24 hour clock follows the `locale` option/device locale instead. |
+| android             | Object              | {}             | optional                   | ignored                    | Android specific options; can also override the shared options above per platform |
+| ios                 | Object              | {}             | ignored                    | optional                   | iOS specific options; can also override the shared options above per platform |
 
 > When providing the `clearText` property, an extra button is shown with intent to clear the current date. When the user taps this button, the `success` callback will be called with an `undefined` date. From a UI perspective, this button should be hidden by application code when no date is currently set by omitting the property, but this is up to you.
 
 #### Android options
 
+The shared options above (`pickerStyle`, `presentation`, `toolbar`, `popupWidth`, `theme`) can be overridden here. Android-only options:
+
 | Name                | Type                | Default     | Description               |
 |---------------------|---------------------|-------------|---------------------------|
-| theme               | int                 | [Theme_DeviceDefault_Dialog](https://developer.android.com/reference/android/R.style.html#Theme_DeviceDefault_Dialog)| android.R.style theme |
-| is24HourView        | boolean             | true        | Use a 24 hour clock |
+| theme               | int                 | (system)    | Besides `light`/`dark`, legacy [android.R.style](https://developer.android.com/reference/android/R.style.html) integers are still accepted and mapped to light/dark by their resource name. |
+| calendar            | boolean             | `false`     | Deprecated: use `pickerStyle: "calendar"` instead. |
 
-> On Lollipop and upwards the date and time pickers changed to calendar and radial pickers. If you want to use spinners (for example to use `minuteInterval`), use a built-in [android.R.style](https://developer.android.com/reference/android/R.style.html) theme that shows a date and time picker with spinners or read up here [how to customize this](./docs/Android_custom_theme_and_styling.md).
+> The Android picker is drawn in a Material 3 styled container (using the `com.google.android.material` library), so it looks the same on every device instead of following the manufacturer theme. `minuteInterval` is supported by the `wheels` time picker only.
+
+##### Custom colors (Android)
+
+The plugin ships a default color theme (One UI flavored: blue accent, white/dark gray surfaces) in [`src/android/res/values/dtp_theme.xml`](src/android/res/values/dtp_theme.xml) and [`values-night/dtp_theme.xml`](src/android/res/values-night/dtp_theme.xml) (dark mode), applied automatically.
+
+The theme is resolved in this order:
+
+1. A style named `DateTimePickerTheme` defined in the **app's** Android resources - a per-app override.
+2. The plugin's bundled `DateTimePickerDefaultTheme` (`dtp_theme.xml`) - edit these files to change the colors globally, or delete them to fall through.
+3. The plain Material 3 day/night defaults.
+
+All styles must have a `Theme.Material3` parent. The relevant attributes:
+
+```xml
+<style name="DateTimePickerTheme" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Accent: buttons, selected day circle, clock hand. All three items
+         are needed: the framework picker widgets read the android: ones. -->
+    <item name="colorPrimary">#0381FE</item>
+    <item name="android:colorAccent">#0381FE</item>
+    <item name="android:colorControlActivated">#0381FE</item>
+    <!-- Popup background. -->
+    <item name="colorSurfaceContainerHigh">#FFFFFF</item>
+    <!-- Bottom sheet background. -->
+    <item name="colorSurfaceContainerLow">#FFFFFF</item>
+    <!-- Text. -->
+    <item name="colorOnSurface">#252525</item>
+    <item name="colorOnSurfaceVariant">#8C8C8C</item>
+</style>
+```
+
+Some text sizes can be tuned with optional dimens (defined in the same `dtp_theme.xml`; remove them to keep the stock sizes):
+
+```xml
+<!-- Calendar header labels (year on top, selected date below). -->
+<dimen name="dtp_header_year_text_size">16sp</dimen>
+<dimen name="dtp_header_date_text_size">28sp</dimen>
+<!-- Footer buttons (Cancel/Clear/OK). -->
+<dimen name="dtp_button_text_size">15sp</dimen>
+<!-- Wheel (spinner) picker text and selection divider thickness. -->
+<dimen name="dtp_wheel_text_size">18sp</dimen>
+<dimen name="dtp_wheel_divider_height">2dp</dimen>
+```
+
+Some text colors can likewise be overridden with optional color resources (remove them to follow the theme colors; also define them in `values-night/` for dark mode):
+
+```xml
+<!-- Calendar header labels (fall back to colorOnSurfaceVariant/colorOnSurface). -->
+<color name="dtp_header_year_text_color">#8C8C8C</color>
+<color name="dtp_header_date_text_color">#252525</color>
+<!-- Footer buttons (fall back to colorPrimary). -->
+<color name="dtp_button_text_color">#0381FE</color>
+<!-- Wheel (spinner) picker text and selection divider color. The divider
+     color is applied through the DtpWheelThemeOverlay style in dtp_theme.xml. -->
+<color name="dtp_wheel_text_color">#252525</color>
+<color name="dtp_wheel_divider_color">#338C8C8C</color>
+```
+
+> The wheel text color/size need Android 10+; on older versions the text color is applied on a best-effort basis and the size keeps the stock value.
+
+For a per-app override, ship the style with the app, e.g. in `config.xml`:
+
+```xml
+<platform name="android">
+    <resource-file src="res/android/values/app_dtp_theme.xml" target="app/src/main/res/values/app_dtp_theme.xml" />
+    <resource-file src="res/android/values-night/app_dtp_theme.xml" target="app/src/main/res/values-night/app_dtp_theme.xml" />
+</platform>
+```
 
 #### iOS options
 
+The shared options above (`pickerStyle`, `presentation`, `toolbar`, `popupWidth`, `theme`) can be overridden here. The `calendar` picker style needs iOS 14+ and falls back to wheels below. iOS-only options:
+
 | Name                | Type                | Default     | Description               |
 |---------------------|---------------------|-------------|---------------------------|
-| pickerStyle         | String              | `wheels`    | The picker UI: `wheels` shows spinner wheels, `calendar` (iOS 14+) shows an inline calendar. `calendar` applies to the `date` and `datetime` modes only (`time` mode always uses wheels). |
-| presentation        | String              | `sheet`     | How the picker is presented: `sheet` (bottom sheet), `popup` (centered on screen) or `popover` (anchored to `anchorEl`). iOS automatically positions the popover below or above the element, wherever there is room. |
-| anchorEl            | Element or String   |             | The DOM element (or CSS selector) the popover is anchored to. Required for `presentation: "popover"`; without it the picker falls back to the sheet. |
-| toolbar             | boolean             | `true`      | Set to `false` to hide the title and the buttons: only the picker is shown, and dismissing (tapping outside) confirms the selection. |
-| popupWidth          | number              | `360`       | Width of the centered popup in points. Always capped to the screen width; values below 280 are raised to 280. |
+| anchorEl            | Element or String   |             | The DOM element (or CSS selector) the popover is anchored to. Required for `presentation: "popover"`; without it the picker falls back to the sheet. iOS automatically positions the popover below or above the element, wherever there is room. |
 | popoverMaxWidth     | number              |             | Maximum width of the popover content in points. By default the popover sizes itself to its content; values below 280 are raised to 280. |
-| theme               | String              | (system)    | `light` or `dark` forces the picker's appearance regardless of the system theme; omit to follow the system. |
 
 #### Example
 
