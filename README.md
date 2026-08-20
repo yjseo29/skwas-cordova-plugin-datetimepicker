@@ -15,7 +15,7 @@ or for latest
 
 ## Supported platforms
 
-- Android 4.4 and higher
+- Android 6.0 (API 23) and higher
 - iOS 9 and higher
 
 ## Methods
@@ -189,14 +189,9 @@ For a list of all changes  [see here](./CHANGELOG.md).
 
 - Cordova 8 or higher
 - Android:
-  - Android SDK
-  - AndroidX support must be enabled:
-    - `cordova-android@8.0.0`  
-      Requires additional plugin [`cordova-plugin-androidx`](https://www.npmjs.com/package/cordova-plugin-androidx).
-    - `cordova-android@9.0.0`  
-      Requires `<preference name="AndroidXEnabled" value="true" />` to be added to `config.xml`.
-    - `cordova-android@10.0.0`  
-      AndroidX is enabled by default.
+  - Android SDK (SDK Platform 35 and Build Tools 35.0.0 or higher)
+  - `cordova-android@14.0.0` or higher (the `com.google.android.material` library requires compile SDK 35)
+  - `android-minSdkVersion` 23 or higher (the `cordova-android@14` default is 24)
 - Xcode 11 or higher (iOS)
   - &gt;= `cordova-ios@5.1.1`
 - Node 10.x or higher

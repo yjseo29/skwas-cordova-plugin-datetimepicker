@@ -41,7 +41,7 @@ THE SOFTWARE.
 
     <!-- android -->
     <platform name="android">
-        <framework src="com.google.android.material:material:1.11.0" />
+        <framework src="com.google.android.material:material:1.14.0" />
 
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="DateTimePicker" >
