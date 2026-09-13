@@ -34,6 +34,17 @@
 // content.
 @property (nonatomic, assign) CGFloat popoverMaxWidth;
 
+// iOS 16+: draw the calendar style with UICalendarView (which can decorate
+// days) instead of the inline UIDatePicker; see DTPCalendarPickerView. The
+// date picker still carries the configuration (mode, locale, min/max, date).
+@property (nonatomic, assign) BOOL useCalendarView;
+
+// Per-day decorations for the calendar view, keyed by Gregorian "yyyy-MM-dd".
+@property (strong) NSDictionary<NSString *, NSDictionary *> *decorations;
+
+// Label of the time row under the calendar view (date+time only).
+@property (strong) NSString *timeText;
+
 @property (strong) NSString *titleText;
 @property (strong) NSString *doneText;
 @property (strong) NSString *cancelText;
@@ -41,5 +52,8 @@
 @property (strong) UIDatePicker *datePicker;
 @property (nonatomic, strong) void (^doneHandler)(id sender);
 @property (nonatomic, strong) void (^cancelHandler)();
+
+// The picked date: the date picker's, or the calendar view's day + time.
+- (NSDate *)resultDate;
 
 @end

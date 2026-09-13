@@ -56,6 +56,8 @@ This was the original way to call the plugin, and is kept for compatibility.
 | popupWidth          | number              | `360`          | ![Supported][supported]    | ![Supported][supported]    | Width of the centered popup in points/dp. Always capped to the screen width. |
 | theme               | String              | (system)       | ![Supported][supported]    | ![Supported][supported]    | `light` or `dark` forces the picker's appearance regardless of the system theme; omit to follow the system. |
 | is24HourView        | boolean             | (device&#160;setting) | ![Supported][supported] | uses&#160;`locale`         | Use a 24 hour clock; when omitted the device's 24-hour setting is followed. On iOS the 12/24 hour clock follows the `locale` option/device locale instead. |
+| decorations         | Array               |                | -                          | iOS&#160;16+               | Marks under the day numbers of the `calendar` picker style, e.g. the days of a trip. See [Decorations](#decorations-ios-16). |
+| timeText            | String              | `Time`         | -                          | iOS&#160;16+               | Label of the time row under the calendar in `datetime` mode, when the calendar is drawn by `UICalendarView` (see `decorations` / `ios.calendarView`). |
 | android             | Object              | {}             | optional                   | ignored                    | Android specific options; can also override the shared options above per platform |
 | ios                 | Object              | {}             | ignored                    | optional                   | iOS specific options; can also override the shared options above per platform |
 
@@ -147,6 +149,33 @@ The shared options above (`pickerStyle`, `presentation`, `toolbar`, `popupWidth`
 |---------------------|---------------------|-------------|---------------------------|
 | anchorEl            | Element or String   |             | The DOM element (or CSS selector) the popover is anchored to. Required for `presentation: "popover"`; without it the picker falls back to the sheet. iOS automatically positions the popover below or above the element, wherever there is room. |
 | popoverMaxWidth     | number              |             | Maximum width of the popover content in points. By default the popover sizes itself to its content; values below 280 are raised to 280. |
+| calendarView        | boolean             | `false`     | iOS 16+: draw the `calendar` picker style with `UICalendarView` even without `decorations`, so the picker always looks the same. |
+
+#### Decorations (iOS 16+)
+
+`UIDatePicker` cannot mark individual days, but `UICalendarView` (iOS 16+, the same calendar grid) can put a small decoration under each day number. When `decorations` is given (and the picker style is `calendar`, in the `date` or `datetime` mode), the calendar is drawn by `UICalendarView`; for `datetime` a "Time" row with the compact time picker is added under it, like the inline picker shows. Below iOS 16 the inline `UIDatePicker` is shown without decorations.
+
+Each entry marks one day (`date`) or every day of a range (`from` to `to`, inclusive); dates are `"YYYY-MM-DD"` strings. Later entries win, so a range of dots can be followed by labels on its ends:
+
+```js
+decorations: [
+    { from: "2026-01-05", to: "2026-01-10", style: "dot", color: "#42a0d8", size: "small" },
+    { date: "2026-01-05", style: "label", text: "Start", color: "#42a0d8" },
+    { date: "2026-01-10", style: "label", text: "End", color: "#42a0d8" }
+]
+```
+
+| Name  | Type   | Default     | Description |
+|-------|--------|-------------|-------------|
+| date  | String |             | The day to mark (`"YYYY-MM-DD"`), or use `from`/`to` for a range |
+| from, to | String |          | The first and last day of a range (inclusive) |
+| style | String | `dot`       | `dot` (a filled circle), `bar` (a line as wide as the day), `label` (a small text, `text`) or `image` (an SF Symbol, `image`) |
+| color | String | (tint color) | Hex color (`#rrggbb` or `#rrggbbaa`) |
+| size  | String | `medium`    | `small`, `medium` or `large` — `dot` and `image` only |
+| text  | String |             | The label text (`label`). UIKit clips decorations to the small area under the day number, so the font shrinks to fit the day's width. |
+| image | String |             | An SF Symbol name (`image`), e.g. `airplane.departure` |
+
+Decorations are not interactive and never change the day number itself (UIKit draws them below it).
 
 #### Example
 
@@ -182,6 +211,11 @@ cordova.plugins.DateTimePicker.hide();
 ```
 
 ## Changelog
+
+### 3.1.0 (fork)
+
+- iOS: `decorations` (per-day dots, bars, labels and SF Symbol images under the day numbers) drawn by `UICalendarView` (iOS 16+), `timeText`, `ios.calendarView`.
+
 
 For a list of all changes  [see here](./CHANGELOG.md).
 

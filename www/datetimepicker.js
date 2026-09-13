@@ -76,6 +76,19 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
         // followed. Android only: on iOS the 12/24 hour clock follows the
         // locale option/device locale.
         is24HourView: undefined,
+        // Marks under the day numbers of the calendar picker style, e.g. the
+        // days of a trip: [{from: "2026-01-05", to: "2026-01-10", style: "dot",
+        // color: "#ff5a5f"}, {date: "2026-01-05", style: "label", text: "Start"}].
+        // Each entry marks one day ("date") or a range ("from"/"to", inclusive)
+        // with style "dot" (default; size "small"|"medium"|"large"), "bar",
+        // "label" (text) or "image" (an SF Symbol name; size), in "color"
+        // (hex; defaults to the tint color). Later entries win. iOS 16+: the
+        // calendar is then drawn by UICalendarView (see ios.calendarView);
+        // Android: not yet supported.
+        decorations: undefined,
+        // Label of the time row under the calendar (datetime mode) when the
+        // calendar is drawn by UICalendarView; defaults to "Time".
+        timeText: null,
         // Android specific options; the shared options above can be overridden
         // per platform here. Android-only: theme also accepts legacy
         // android.R.style integers, is24HourView, calendar (deprecated - use
@@ -99,7 +112,10 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
             toolbar: undefined,
             popupWidth: undefined,
             popoverMaxWidth: undefined,
-            theme: undefined
+            theme: undefined,
+            // true draws the calendar picker style with UICalendarView (iOS
+            // 16+) even without decorations, so it always looks the same.
+            calendarView: undefined
         },
         success: undefined,
         cancel: undefined,
@@ -165,6 +181,10 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
         if (!!settings.minuteInterval && utils.validate(utils.isMinuteInterval, settings, "minuteInterval", "Expected a Number which is a divisor of 60 (min 1, max 30).")) {
             settings.minuteInterval = parseInt(settings.minuteInterval);
         }
+
+        if (utils.isDefined(settings.decorations) && settings.decorations !== null && !Array.isArray(settings.decorations)) {
+            throw Error("The value for option 'decorations' is invalid. Expected an Array of {date | from, to, style, color, size, text, image}.");
+        }
     } catch (e) {
         onPluginError(e.message);
         return;
@@ -197,7 +217,8 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
         toolbar: firstDefined(iosOptions.toolbar, settings.toolbar),
         popupWidth: firstDefined(iosOptions.popupWidth, settings.popupWidth),
         popoverMaxWidth: iosOptions.popoverMaxWidth,
-        theme: firstDefined(iosOptions.theme, settings.theme)
+        theme: firstDefined(iosOptions.theme, settings.theme),
+        calendarView: iosOptions.calendarView
     };
     var anchorEl = iosOptions.anchorEl;
     if (anchorEl) {

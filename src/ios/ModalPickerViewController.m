@@ -1,4 +1,5 @@
 #import "ModalPickerViewController.h"
+#import "DTPCalendarPickerView.h"
 #import "Extensions.h"
 
 static const float kHeaderBarHeight = 44;
@@ -18,6 +19,9 @@ static const float kHeaderButtonGap = 8;
 static const float kCapsuleButtonCornerRadius = 16;
 
 @interface ModalPickerViewController()
+
+// Built per presentation when useCalendarView is set (iOS 16+).
+@property (nonatomic, strong) DTPCalendarPickerView *calendarPicker API_AVAILABLE(ios(16.0));
 
 @end
 
@@ -46,6 +50,7 @@ static const float kCapsuleButtonCornerRadius = 16;
     BOOL _builtAsPopover;
     BOOL _builtAsInline;
     BOOL _builtWithToolbar;
+    BOOL _builtAsCalendarView;
 
     UIColor *lightBackgroundColor;
     UIColor *lightCapsuleFillColor;
@@ -99,6 +104,10 @@ static const float kCapsuleButtonCornerRadius = 16;
 - (void)teardownControls {
     [_internalView removeFromSuperview];
     [_datePicker removeFromSuperview];
+    if (@available(iOS 16.0, *)) {
+        [self.calendarPicker removeFromSuperview];
+        self.calendarPicker = nil;
+    }
     // Do NOT reset datepicker ref (nor its reusable height constraint).
     _headerView = nil;
     _titleLabel = nil;
@@ -124,6 +133,9 @@ static const float kCapsuleButtonCornerRadius = 16;
                || _builtAsPopover != self.popoverPresentation
                || _builtAsInline != self.inlinePicker
                || _builtWithToolbar != self.showToolbar
+               // The calendar view is built per presentation: it is cheap and
+               // opens fresh (month grid, decorations, dates) every time.
+               || _builtAsCalendarView || self.useCalendarView
                // The date picker is detached when its style is reset (see
                // configureDatePicker); rebuild to re-add it.
                || _datePicker.superview == nil) {
@@ -194,6 +206,7 @@ static const float kCapsuleButtonCornerRadius = 16;
     _builtAsPopover = self.popoverPresentation;
     _builtAsInline = self.inlinePicker;
     _builtWithToolbar = self.showToolbar;
+    _builtAsCalendarView = NO;
     BOOL popupLike = self.popupPresentation || self.popoverPresentation;
     // The calendar always gets the footer layout (title on top, buttons below a
     // hairline), even in the sheet; wheels in the sheet keep the header buttons.
@@ -211,7 +224,25 @@ static const float kCapsuleButtonCornerRadius = 16;
     }
     _internalView.layer.masksToBounds = TRUE;
 
-    [_internalView addSubview:_datePicker];
+    // The picker: the date picker, or (iOS 16+) the calendar view configured
+    // from the date picker's settings.
+    UIView *pickerView = _datePicker;
+    if (@available(iOS 16.0, *)) {
+        if (self.useCalendarView) {
+            DTPCalendarPickerView *calendarPicker = [[DTPCalendarPickerView alloc] initWithLocale:_datePicker.locale
+                                                                                        showTime:_datePicker.datePickerMode == UIDatePickerModeDateAndTime
+                                                                                        timeText:_timeText != (id)[NSNull null] ? _timeText : nil];
+            calendarPicker.decorations = self.decorations;
+            calendarPicker.minimumDate = _datePicker.minimumDate;
+            calendarPicker.maximumDate = _datePicker.maximumDate;
+            calendarPicker.minuteInterval = _datePicker.minuteInterval;
+            calendarPicker.date = _datePicker.date;
+            self.calendarPicker = calendarPicker;
+            pickerView = calendarPicker;
+            _builtAsCalendarView = YES;
+        }
+    }
+    [_internalView addSubview:pickerView];
 
     if (self.showToolbar) {
         // Header: title only (popup/popover), or title and buttons (sheet).
@@ -247,7 +278,7 @@ static const float kCapsuleButtonCornerRadius = 16;
 
     // Set constraints.
     _internalView.translatesAutoresizingMaskIntoConstraints = FALSE;
-    _datePicker.translatesAutoresizingMaskIntoConstraints = FALSE;
+    pickerView.translatesAutoresizingMaskIntoConstraints = FALSE;
     _headerView.translatesAutoresizingMaskIntoConstraints = FALSE;
     _titleLabel.translatesAutoresizingMaskIntoConstraints = FALSE;
     _footerView.translatesAutoresizingMaskIntoConstraints = FALSE;
@@ -299,10 +330,10 @@ static const float kCapsuleButtonCornerRadius = 16;
         CGFloat padding = popupLike ? kPopupContentPadding : 0;
         CGFloat topPadding = popupLike ? kPopupContentPadding : kHeaderTopPadding;
         [NSLayoutConstraint activateConstraints:@[
-            [_datePicker.topAnchor constraintEqualToAnchor:_internalView.topAnchor constant:topPadding],
-            [_datePicker.leadingAnchor constraintEqualToAnchor:_internalView.leadingAnchor constant:padding],
-            [_datePicker.trailingAnchor constraintEqualToAnchor:_internalView.trailingAnchor constant:-padding],
-            [_datePicker.bottomAnchor constraintEqualToAnchor:_internalView.bottomAnchor constant:-padding],
+            [pickerView.topAnchor constraintEqualToAnchor:_internalView.topAnchor constant:topPadding],
+            [pickerView.leadingAnchor constraintEqualToAnchor:_internalView.leadingAnchor constant:padding],
+            [pickerView.trailingAnchor constraintEqualToAnchor:_internalView.trailingAnchor constant:-padding],
+            [pickerView.bottomAnchor constraintEqualToAnchor:_internalView.bottomAnchor constant:-padding],
         ]];
         return;
     }
@@ -324,10 +355,10 @@ static const float kCapsuleButtonCornerRadius = 16;
             [_titleLabel.leadingAnchor constraintGreaterThanOrEqualToAnchor:_headerView.leadingAnchor constant:kHeaderButtonInset],
             [_titleLabel.trailingAnchor constraintLessThanOrEqualToAnchor:_headerView.trailingAnchor constant:-kHeaderButtonInset],
 
-            [_datePicker.topAnchor constraintEqualToAnchor:_headerView.bottomAnchor],
-            [_datePicker.leadingAnchor constraintEqualToAnchor:_internalView.leadingAnchor constant:kPopupContentPadding],
-            [_datePicker.trailingAnchor constraintEqualToAnchor:_internalView.trailingAnchor constant:-kPopupContentPadding],
-            [_datePicker.bottomAnchor constraintEqualToAnchor:_footerView.topAnchor],
+            [pickerView.topAnchor constraintEqualToAnchor:_headerView.bottomAnchor],
+            [pickerView.leadingAnchor constraintEqualToAnchor:_internalView.leadingAnchor constant:kPopupContentPadding],
+            [pickerView.trailingAnchor constraintEqualToAnchor:_internalView.trailingAnchor constant:-kPopupContentPadding],
+            [pickerView.bottomAnchor constraintEqualToAnchor:_footerView.topAnchor],
 
             [_footerView.leadingAnchor constraintEqualToAnchor:_internalView.leadingAnchor],
             [_footerView.trailingAnchor constraintEqualToAnchor:_internalView.trailingAnchor],
@@ -373,12 +404,19 @@ static const float kCapsuleButtonCornerRadius = 16;
             [_titleLabel.leadingAnchor constraintGreaterThanOrEqualToAnchor:_cancelBtn.trailingAnchor constant:kHeaderButtonGap],
             [_titleLabel.trailingAnchor constraintLessThanOrEqualToAnchor:_clearBtn.leadingAnchor constant:-kHeaderButtonGap],
 
-            [_datePicker.topAnchor constraintEqualToAnchor:_headerView.bottomAnchor],
-            [_datePicker.leadingAnchor constraintEqualToAnchor:_internalView.leadingAnchor],
-            [_datePicker.trailingAnchor constraintEqualToAnchor:_internalView.trailingAnchor],
-            [_datePicker.bottomAnchor constraintEqualToAnchor:_internalView.bottomAnchor],
+            [pickerView.topAnchor constraintEqualToAnchor:_headerView.bottomAnchor],
+            [pickerView.leadingAnchor constraintEqualToAnchor:_internalView.leadingAnchor],
+            [pickerView.trailingAnchor constraintEqualToAnchor:_internalView.trailingAnchor],
+            [pickerView.bottomAnchor constraintEqualToAnchor:_internalView.bottomAnchor],
         ]];
     }
+}
+
+- (NSDate *)resultDate {
+    if (@available(iOS 16.0, *)) {
+        if (_builtAsCalendarView && self.calendarPicker) return self.calendarPicker.date;
+    }
+    return _datePicker.date;
 }
 
 - (UIButton *)createButtonWithAction:(SEL)action {

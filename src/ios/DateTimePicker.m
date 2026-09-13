@@ -121,7 +121,7 @@
         if (modelPicker == nil) {
             [self callbackSuccessWithJavascript:nil];
         } else {
-            [self callbackSuccessWithJavascript:modelPicker.datePicker.date];
+            [self callbackSuccessWithJavascript:[modelPicker resultDate]];
         }
         _isVisible = NO;
     };
@@ -181,6 +181,19 @@
     BOOL usePopover = [presentation isEqualToString:@"popover"]
         && [anchorRect isKindOfClass:NSDictionary.class];
     BOOL usePopup = !usePopover && [presentation isEqualToString:@"popup"];
+
+    // Per-day decorations (dots, bars, labels, images under the day numbers)
+    // need UICalendarView, iOS 16+; "calendarView" forces it without any.
+    // Below iOS 16 the inline date picker is shown without decorations.
+    NSArray *decorations = [optionsOrNil objectForKeyNotNull:@"decorations"];
+    NSNumber *calendarViewValue = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"calendarView"] : nil;
+    BOOL useCalendarView = NO;
+    if (@available(iOS 16.0, *)) {
+        useCalendarView = useCalendar && (([decorations isKindOfClass:NSArray.class] && decorations.count > 0) || [calendarViewValue boolValue]);
+    }
+    self.modalPicker.useCalendarView = useCalendarView;
+    self.modalPicker.decorations = useCalendarView ? [self decorationsByDay:decorations] : nil;
+    self.modalPicker.timeText = [optionsOrNil objectForKeyNotNull:@"timeText"];
 
     self.modalPicker.inlinePicker = useCalendar;
     self.modalPicker.popupPresentation = usePopup;
@@ -276,6 +289,38 @@
     // Selected date.
     long long ticks = [[optionsOrNil objectForKey:@"ticks"] longLongValue];
     [datePicker setDate:[[NSDate dateWithTimeIntervalSince1970:(ticks / DDBIntervalFactor)] roundToMinuteInterval:minuteInterval] animated:FALSE];
+}
+
+// Expands the "decorations" option into a per-day dictionary keyed by Gregorian
+// "yyyy-MM-dd". Each entry marks one day ("date") or every day of a range
+// ("from" to "to", inclusive) with its style/color/size/text/image; later
+// entries win, so a range of dots can be followed by labels on its ends.
+- (NSDictionary<NSString *, NSDictionary *> *)decorationsByDay:(NSArray *)decorations {
+    NSMutableDictionary *byDay = [NSMutableDictionary dictionary];
+    if (![decorations isKindOfClass:NSArray.class]) return byDay;
+
+    NSCalendar *gregorian = [NSCalendar calendarWithIdentifier:NSCalendarIdentifierGregorian];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    formatter.calendar = gregorian;
+    formatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+    formatter.dateFormat = @"yyyy-MM-dd";
+
+    for (id entry in decorations) {
+        if (![entry isKindOfClass:NSDictionary.class]) continue;
+        id from = [entry objectForKeyNotNull:@"from"] ?: [entry objectForKeyNotNull:@"date"];
+        id to = [entry objectForKeyNotNull:@"to"] ?: from;
+        NSDate *fromDate = [from isKindOfClass:NSString.class] ? [formatter dateFromString:from] : nil;
+        NSDate *toDate = [to isKindOfClass:NSString.class] ? [formatter dateFromString:to] : nil;
+        if (!fromDate || !toDate) continue;
+
+        // Bounded so a broken range cannot spin for years.
+        NSDate *day = fromDate;
+        for (NSInteger i = 0; i < 1000 && [day compare:toDate] != NSOrderedDescending; i++) {
+            byDay[[formatter stringFromDate:day]] = entry;
+            day = [gregorian dateByAddingUnit:NSCalendarUnitDay value:1 toDate:day options:0];
+        }
+    }
+    return byDay;
 }
 
 // Sends the date to the plugin javascript handler.

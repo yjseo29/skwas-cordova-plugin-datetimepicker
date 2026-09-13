@@ -57,6 +57,19 @@ interface IDatePickerOptions {
    * When omitted, the device's 24-hour setting is followed.
    */
   is24HourView?: boolean;
+  /**
+   * Marks under the day numbers of the calendar picker style (iOS 16+; the
+   * calendar is then drawn by UICalendarView, with a compact time picker row
+   * for the datetime mode). Each entry marks one day (date) or every day of
+   * a range (from/to, inclusive), dates as "YYYY-MM-DD"; later entries win.
+   * Ignored on Android and below iOS 16.
+   */
+  decorations?: DateTimePickerDecoration[];
+  /**
+   * Label of the time row under the calendar in the datetime mode when the
+   * calendar is drawn by UICalendarView (iOS 16+). Defaults to "Time".
+   */
+  timeText?: string;
   android?: {
     /**
      * The picker UI. "wheels" (default) shows spinner wheels. "calendar"
@@ -131,10 +144,38 @@ interface IDatePickerOptions {
      * system theme; omit to follow the system (default).
      */
     theme?: 'light' | 'dark';
+    /**
+     * iOS 16+: draw the calendar picker style with UICalendarView even
+     * without decorations, so the picker always looks the same.
+     */
+    calendarView?: boolean;
   };
   success: (newDate?: Date) => void;
   cancel?: () => void;
   error: (err: Error) => void;
+}
+
+/** A mark under a day number of the calendar picker (iOS 16+). */
+interface DateTimePickerDecoration {
+  /** The day to mark ("YYYY-MM-DD"); or use from/to for a range. */
+  date?: string;
+  /** The first day of a range ("YYYY-MM-DD", inclusive). */
+  from?: string;
+  /** The last day of a range ("YYYY-MM-DD", inclusive). */
+  to?: string;
+  /**
+   * "dot" (default): a filled circle; "bar": a line as wide as the day;
+   * "label": a small text (text); "image": an SF Symbol (image).
+   */
+  style?: 'dot' | 'bar' | 'label' | 'image';
+  /** Hex color ("#rrggbb" or "#rrggbbaa"); defaults to the tint color. */
+  color?: string;
+  /** "small", "medium" (default) or "large"; dot and image only. */
+  size?: 'small' | 'medium' | 'large';
+  /** The label text (style "label"); shrinks to fit the day's width. */
+  text?: string;
+  /** An SF Symbol name (style "image"), e.g. "airplane.departure". */
+  image?: string;
 }
 
 interface DateTimePicker {

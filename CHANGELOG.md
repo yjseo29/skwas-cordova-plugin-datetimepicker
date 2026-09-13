@@ -3,6 +3,10 @@
 
 Changelog for [skwas-cordova-plugin-datetimepicker](./README.md).
 
+## 3.1.0 (fork)
+
+- iOS: `decorations` — dots, bars, small labels and SF Symbol images under the day numbers of the calendar picker style, drawn by `UICalendarView` (iOS 16+; a compact time picker row is added for the datetime mode). New `timeText` and `ios.calendarView` options.
+
 ## 3.0.2
 
 - iOS: Hide keyboard input when clicking on ios current datetime entry (#60)
