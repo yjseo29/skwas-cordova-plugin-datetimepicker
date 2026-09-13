@@ -3,6 +3,10 @@
 
 Changelog for [skwas-cordova-plugin-datetimepicker](./README.md).
 
+## 3.2.0 (fork)
+
+- `dismissOnOutsideTap` (shared, android/ios override): `false` ignores taps outside the picker so only the toolbar buttons close it (Android: the back button still cancels). Ignored without a toolbar.
+
 ## 3.1.0 (fork)
 
 - iOS: `decorations` — dots, bars, small labels and SF Symbol images under the day numbers of the calendar picker style, drawn by `UICalendarView` (iOS 16+; a compact time picker row is added for the datetime mode). New `timeText` and `ios.calendarView` options.

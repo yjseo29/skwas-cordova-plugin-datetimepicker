@@ -53,6 +53,7 @@ This was the original way to call the plugin, and is kept for compatibility.
 | pickerStyle         | String              | `wheels`       | ![Supported][supported]    | ![Supported][supported]    | The picker UI: `wheels` shows spinner wheels, `calendar` shows the calendar date picker. On Android the calendar style also uses the clock face time picker (all modes); on iOS the `time` mode always uses wheels. |
 | presentation        | String              | `sheet`        | ![Supported][supported]    | ![Supported][supported]    | How the picker is presented: `sheet` (bottom sheet), `popup` (centered) or `popover` (iOS only, anchored to `ios.anchorEl`; falls back to `popup` on Android). |
 | toolbar             | boolean             | `true`         | ![Supported][supported]    | ![Supported][supported]    | Set to `false` to hide the title and the buttons: only the picker is shown, and dismissing confirms the selection. |
+| dismissOnOutsideTap | boolean             | `true`         | ![Supported][supported]    | ![Supported][supported]    | Set to `false` to ignore taps outside the picker: only the toolbar buttons close it (on Android the back button still cancels). Ignored without a toolbar. By default an outside tap cancels with a toolbar and confirms without one. |
 | popupWidth          | number              | `360`          | ![Supported][supported]    | ![Supported][supported]    | Width of the centered popup in points/dp. Always capped to the screen width. |
 | theme               | String              | (system)       | ![Supported][supported]    | ![Supported][supported]    | `light` or `dark` forces the picker's appearance regardless of the system theme; omit to follow the system. |
 | is24HourView        | boolean             | (device&#160;setting) | ![Supported][supported] | uses&#160;`locale`         | Use a 24 hour clock; when omitted the device's 24-hour setting is followed. On iOS the 12/24 hour clock follows the `locale` option/device locale instead. |
@@ -65,7 +66,7 @@ This was the original way to call the plugin, and is kept for compatibility.
 
 #### Android options
 
-The shared options above (`pickerStyle`, `presentation`, `toolbar`, `popupWidth`, `theme`) can be overridden here. Android-only options:
+The shared options above (`pickerStyle`, `presentation`, `toolbar`, `dismissOnOutsideTap`, `popupWidth`, `theme`) can be overridden here. Android-only options:
 
 | Name                | Type                | Default     | Description               |
 |---------------------|---------------------|-------------|---------------------------|
@@ -143,7 +144,7 @@ For a per-app override, ship the style with the app, e.g. in `config.xml`:
 
 #### iOS options
 
-The shared options above (`pickerStyle`, `presentation`, `toolbar`, `popupWidth`, `theme`) can be overridden here. The `calendar` picker style needs iOS 14+ and falls back to wheels below. iOS-only options:
+The shared options above (`pickerStyle`, `presentation`, `toolbar`, `dismissOnOutsideTap`, `popupWidth`, `theme`) can be overridden here. The `calendar` picker style needs iOS 14+ and falls back to wheels below. iOS-only options:
 
 | Name                | Type                | Default     | Description               |
 |---------------------|---------------------|-------------|---------------------------|
@@ -211,6 +212,10 @@ cordova.plugins.DateTimePicker.hide();
 ```
 
 ## Changelog
+
+### 3.2.0 (fork)
+
+- `dismissOnOutsideTap: false` ignores taps outside the picker (toolbar only), for tall pickers on small screens where an outside tap is easy to hit by accident.
 
 ### 3.1.0 (fork)
 

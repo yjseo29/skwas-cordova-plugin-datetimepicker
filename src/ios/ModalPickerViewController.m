@@ -62,6 +62,7 @@ static const float kCapsuleButtonCornerRadius = 16;
     if ((self = [super init])) {
         _datePicker = [[UIDatePicker alloc] init];
         _showToolbar = YES;
+        _dismissOnOutsideTap = YES;
     }
 
     return self;
@@ -526,6 +527,10 @@ NSString *UIKitLocalizedString(NSString *key) {
     // Only dismiss for taps outside the sheet.
     CGPoint location = [recognizer locationInView:self.view];
     if (_internalView && !CGRectContainsPoint(_internalView.frame, location)) {
+        // Outside taps can be disabled, but only when the toolbar offers
+        // buttons to close the picker.
+        if (!self.dismissOnOutsideTap && self.showToolbar) return;
+
         [self dismissViewControllerAnimated:true completion:^(void) {
             // Without a toolbar there are no buttons, so dismissing confirms
             // the selection; with a toolbar it cancels.

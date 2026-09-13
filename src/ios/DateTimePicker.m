@@ -91,6 +91,12 @@
     return UIModalPresentationNone;
 }
 
+// Outside taps can be disabled for the popover too, but only when the toolbar
+// offers buttons to close it.
+- (BOOL)presentationControllerShouldDismiss:(UIPresentationController *)presentationController {
+    return self.modalPicker.dismissOnOutsideTap || !self.modalPicker.showToolbar;
+}
+
 // Called when the user dismisses the popover by tapping outside of it.
 // Without a toolbar there are no buttons, so dismissing confirms the
 // selection; with a toolbar it cancels.
@@ -142,12 +148,14 @@
     //   (anchored to the element rect in "anchorRect"; the system decides
     //   whether it fits below or above the element).
     // - toolbar: NO hides the title and buttons; dismissing then confirms.
+    // - dismissOnOutsideTap: NO ignores taps outside the picker (toolbar only).
     NSString *mode = [optionsOrNil objectForKey:@"mode"];
     NSDictionary *iosOptions = [optionsOrNil objectForKeyNotNull:@"ios"];
     NSString *pickerStyleRaw = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"pickerStyle"] : nil;
     NSString *presentationRaw = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"presentation"] : nil;
     NSDictionary *anchorRect = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"anchorRect"] : nil;
     NSNumber *toolbarValue = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"toolbar"] : nil;
+    NSNumber *dismissOnOutsideTapValue = [iosOptions isKindOfClass:NSDictionary.class] ? [iosOptions objectForKeyNotNull:@"dismissOnOutsideTap"] : nil;
     NSString *pickerStyle = [pickerStyleRaw isKindOfClass:NSString.class] ? [pickerStyleRaw lowercaseString] : @"";
     NSString *presentation = [presentationRaw isKindOfClass:NSString.class] ? [presentationRaw lowercaseString] : @"";
 
@@ -199,6 +207,7 @@
     self.modalPicker.popupPresentation = usePopup;
     self.modalPicker.popoverPresentation = usePopover;
     self.modalPicker.showToolbar = toolbarValue != nil ? [toolbarValue boolValue] : YES;
+    self.modalPicker.dismissOnOutsideTap = dismissOnOutsideTapValue != nil ? [dismissOnOutsideTapValue boolValue] : YES;
 
     // Optional width overrides; clamped to a sane minimum so the picker
     // cannot be squeezed into an unusable layout.

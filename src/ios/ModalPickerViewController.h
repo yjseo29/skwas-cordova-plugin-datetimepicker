@@ -26,6 +26,12 @@
 // dismissing (tapping outside) confirms the selection. Defaults to YES.
 @property (nonatomic, assign) BOOL showToolbar;
 
+// When NO, tapping outside the picker does nothing; only the toolbar buttons
+// close it. Ignored without a toolbar (there would be no way to close the
+// picker). Defaults to YES: tapping outside cancels with a toolbar and
+// confirms without one.
+@property (nonatomic, assign) BOOL dismissOnOutsideTap;
+
 // Width of the centered popup in points; 0 uses the default (360). Always
 // capped to the screen width by a required layout constraint.
 @property (nonatomic, assign) CGFloat popupWidth;

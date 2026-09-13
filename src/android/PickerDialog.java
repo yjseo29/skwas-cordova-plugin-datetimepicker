@@ -54,12 +54,14 @@ final class PickerDialog {
 	 *
 	 * When the toolbar is shown, dismissing the dialog (back button/outside
 	 * touch) cancels; without a toolbar there are no buttons, so dismissing
-	 * confirms the selection instead.
+	 * confirms the selection instead. With a toolbar, outside touches can be
+	 * ignored (dismissOnOutsideTap false); the back button always cancels.
 	 */
 	static Dialog create(final Context context, final boolean asSheet, final View pickerView,
 						 final CharSequence titleText, final CharSequence okText, final CharSequence cancelText,
-						 final CharSequence clearText, final boolean showToolbar, final int popupWidthDp,
-						 final boolean hugContent, final boolean trimPickerSides, final Listener listener) {
+						 final CharSequence clearText, final boolean showToolbar, final boolean dismissOnOutsideTap,
+						 final int popupWidthDp, final boolean hugContent, final boolean trimPickerSides,
+						 final Listener listener) {
 		final boolean night = isNight(context);
 		final int surfaceColor = resolveColor(context, materialAttr(context, "colorSurfaceContainerHigh"), night ? 0xFF2B2930 : 0xFFECE6F0);
 		final int onSurfaceColor = resolveColor(context, materialAttr(context, "colorOnSurface"), night ? 0xFFE6E0E9 : 0xFF1D1B20);
@@ -156,7 +158,7 @@ final class PickerDialog {
 		}
 
 		dialog.setCancelable(true);
-		dialog.setCanceledOnTouchOutside(true);
+		dialog.setCanceledOnTouchOutside(dismissOnOutsideTap || !showToolbar);
 
 		// Back button/outside touch: cancel with a toolbar, confirm without one.
 		dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {

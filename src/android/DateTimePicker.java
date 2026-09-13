@@ -60,6 +60,9 @@ public class DateTimePicker extends CordovaPlugin {
 		public String pickerStyle = "wheels";     // "wheels" | "calendar"
 		public String presentation = "sheet";     // "sheet" | "popup" ("popover" falls back to "popup")
 		public boolean toolbar = true;
+		// false ignores touches outside the dialog (the back button still
+		// cancels); only applies with a toolbar, whose buttons close it.
+		public boolean dismissOnOutsideTap = true;
 		public int popupWidth = 0;                 // dp, 0 = default
 		public Boolean forceDarkTheme = null;      // null = follow system
 		// Defaults to the device's "use 24-hour format" setting (like iOS,
@@ -122,6 +125,7 @@ public class DateTimePicker extends CordovaPlugin {
 				}
 
 				toolbar = androidOptions.optBoolean("toolbar", toolbar);
+				dismissOnOutsideTap = androidOptions.optBoolean("dismissOnOutsideTap", dismissOnOutsideTap);
 				popupWidth = androidOptions.optInt("popupWidth", popupWidth);
 				is24HourView = androidOptions.optBoolean("is24HourView", is24HourView);
 
@@ -300,6 +304,7 @@ public class DateTimePicker extends CordovaPlugin {
 						options.cancelText,
 						options.clearText,
 						options.toolbar,
+						options.dismissOnOutsideTap,
 						options.popupWidth,
 						// The calendar has a fixed framework width; hug it so the
 						// popup has no artificial side margins (unless the app

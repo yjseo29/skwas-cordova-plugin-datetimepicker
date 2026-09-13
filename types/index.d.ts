@@ -41,6 +41,14 @@ interface IDatePickerOptions {
    */
   toolbar?: boolean;
   /**
+   * Set to false to ignore taps outside the picker: only the toolbar buttons
+   * close it (on Android the back button still cancels). Ignored without a
+   * toolbar. Defaults to true: an outside tap cancels with a toolbar and
+   * confirms without one. (Both platforms; the android/ios objects can
+   * override it.)
+   */
+  dismissOnOutsideTap?: boolean;
+  /**
    * Width of the centered popup in points/dp (default 360). Always capped to
    * the screen width. (Both platforms; the android/ios objects can override it.)
    */
@@ -88,6 +96,8 @@ interface IDatePickerOptions {
      * shown, and dismissing confirms the selection. Defaults to true.
      */
     toolbar?: boolean;
+    /** Ignore taps outside the picker (toolbar only). Overrides the shared option. */
+    dismissOnOutsideTap?: boolean;
     /**
      * Width of the centered popup in dp (default 360). Always capped to the
      * screen width.
@@ -129,6 +139,8 @@ interface IDatePickerOptions {
      * Defaults to true.
      */
     toolbar?: boolean;
+    /** Ignore taps outside the picker (toolbar only). Overrides the shared option. */
+    dismissOnOutsideTap?: boolean;
     /**
      * Width of the centered popup in points (default 360). Always capped to
      * the screen width; values below 280 are raised to 280.

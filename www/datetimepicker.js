@@ -66,6 +66,11 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
         // Set to false to hide the title and the buttons: only the picker is
         // shown, and dismissing confirms the selection.
         toolbar: undefined,
+        // Set to false to ignore taps outside the picker: only the toolbar
+        // buttons close it (on Android the back button still cancels).
+        // Ignored without a toolbar. Default true: an outside tap cancels
+        // with a toolbar and confirms without one.
+        dismissOnOutsideTap: undefined,
         // Width of the centered popup in points/dp (default 360). Always capped
         // to the screen width.
         popupWidth: undefined,
@@ -97,6 +102,7 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
             pickerStyle: undefined,
             presentation: undefined,
             toolbar: undefined,
+            dismissOnOutsideTap: undefined,
             popupWidth: undefined,
             theme: undefined,
             calendar: false
@@ -110,6 +116,7 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
             presentation: undefined,
             anchorEl: undefined,
             toolbar: undefined,
+            dismissOnOutsideTap: undefined,
             popupWidth: undefined,
             popoverMaxWidth: undefined,
             theme: undefined,
@@ -204,6 +211,7 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
         pickerStyle: firstDefined(androidOptions.pickerStyle, settings.pickerStyle),
         presentation: firstDefined(androidOptions.presentation, settings.presentation),
         toolbar: firstDefined(androidOptions.toolbar, settings.toolbar),
+        dismissOnOutsideTap: firstDefined(androidOptions.dismissOnOutsideTap, settings.dismissOnOutsideTap),
         popupWidth: firstDefined(androidOptions.popupWidth, settings.popupWidth),
         theme: firstDefined(androidOptions.theme, settings.theme),
         calendar: androidOptions.calendar,
@@ -215,6 +223,7 @@ DateTimePicker.prototype.show = function (options, successCallback, errorCallbac
         pickerStyle: firstDefined(iosOptions.pickerStyle, settings.pickerStyle),
         presentation: firstDefined(iosOptions.presentation, settings.presentation),
         toolbar: firstDefined(iosOptions.toolbar, settings.toolbar),
+        dismissOnOutsideTap: firstDefined(iosOptions.dismissOnOutsideTap, settings.dismissOnOutsideTap),
         popupWidth: firstDefined(iosOptions.popupWidth, settings.popupWidth),
         popoverMaxWidth: iosOptions.popoverMaxWidth,
         theme: firstDefined(iosOptions.theme, settings.theme),
